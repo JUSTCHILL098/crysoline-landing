@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <!-- Outer hexagon -->
+  <polygon points="50,8 85,28 85,72 50,92 15,72 15,28" stroke="white" stroke-width="3.5" fill="none" stroke-linejoin="round"/>
+  <!-- Inner hexagon (rotated) -->
+  <polygon points="50,22 72,34 72,66 50,78 28,66 28,34" stroke="white" stroke-width="3.5" fill="none" stroke-linejoin="round"/>
+  <!-- Connector lines -->
+  <line x1="50" y1="8" x2="50" y2="22" stroke="white" stroke-width="3.5" stroke-linecap="round"/>
+  <line x1="85" y1="28" x2="72" y2="34" stroke="white" stroke-width="3.5" stroke-linecap="round"/>
+  <line x1="85" y1="72" x2="72" y2="66" stroke="white" stroke-width="3.5" stroke-linecap="round"/>
+  <line x1="50" y1="92" x2="50" y2="78" stroke="white" stroke-width="3.5" stroke-linecap="round"/>
+  <line x1="15" y1="72" x2="28" y2="66" stroke="white" stroke-width="3.5" stroke-linecap="round"/>
+  <line x1="15" y1="28" x2="28" y2="34" stroke="white" stroke-width="3.5" stroke-linecap="round"/>
+  <!-- Node dots on outer hex -->
+  <circle cx="50" cy="8" r="4.5" fill="white"/>
+  <circle cx="85" cy="28" r="4.5" fill="white"/>
+  <circle cx="85" cy="72" r="4.5" fill="white"/>
+  <circle cx="50" cy="92" r="4.5" fill="white"/>
+  <circle cx="15" cy="72" r="4.5" fill="white"/>
+  <circle cx="15" cy="28" r="4.5" fill="white"/>
+</svg>
