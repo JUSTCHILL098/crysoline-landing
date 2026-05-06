@@ -1,6 +1,5 @@
-import { useState, useEffect } from 'react'
-import AnimatedSection from './AnimatedSection'
-import { Copy, Check, Terminal, Zap, Globe, Lock } from 'lucide-react'
+import { useState } from 'react'
+import { Copy, Check, Terminal, ArrowRight, BookOpen, Layers } from 'lucide-react'
 
 const examples = [
   {
@@ -30,260 +29,233 @@ print(r.json()["sources"])`,
   },
 ]
 
-function highlight(code: string, lang: string) {
+// Syntax highlight — returns HTML string
+function highlight(code: string, lang: string): string {
+  // Escape HTML first
+  const esc = code
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+
   if (lang === 'bash') {
-    return code
-      .replace(/(curl)/g, '<span style="color:#a78bfa">$1</span>')
-      .replace(/(".*?")/g, '<span style="color:#86efac">$1</span>')
+    return esc
+      .replace(/\b(curl)\b/g, '<span class="kw">$1</span>')
+      .replace(/(&quot;[^&]*&quot;)/g, '<span class="str">$1</span>')
   }
   if (lang === 'javascript') {
-    return code
-      .replace(/\b(const|await|async|let|var)\b/g, '<span style="color:#a78bfa">$1</span>')
-      .replace(/\b(fetch|console|log|json)\b/g, '<span style="color:#60a5fa">$1</span>')
-      .replace(/('.*?')/g, '<span style="color:#86efac">$1</span>')
-      .replace(/(\/\/.*)/g, '<span style="color:#6b7280">$1</span>')
+    return esc
+      .replace(/\b(const|await|async|let|var|return)\b/g, '<span class="kw">$1</span>')
+      .replace(/\b(fetch|console|log|json|res|data)\b/g, '<span class="fn">$1</span>')
+      .replace(/(&#x27;[^&#]*&#x27;|'[^']*')/g, '<span class="str">$1</span>')
+      .replace(/(\/\/.*)/g, '<span class="cm">$1</span>')
   }
   if (lang === 'python') {
-    return code
-      .replace(/\b(import|print)\b/g, '<span style="color:#a78bfa">$1</span>')
-      .replace(/\b(requests|get|json)\b/g, '<span style="color:#60a5fa">$1</span>')
-      .replace(/(".*?")/g, '<span style="color:#86efac">$1</span>')
-      .replace(/(#.*)/g, '<span style="color:#6b7280">$1</span>')
+    return esc
+      .replace(/\b(import|print|params)\b/g, '<span class="kw">$1</span>')
+      .replace(/\b(requests|get|json|r)\b/g, '<span class="fn">$1</span>')
+      .replace(/(&quot;[^&]*&quot;)/g, '<span class="str">$1</span>')
+      .replace(/(#.*)/g, '<span class="cm">$1</span>')
   }
-  return code
+  return esc
 }
 
-// Looping typewriter: type → pause → delete → repeat across all examples
-function useLoopTypewriter(examples: { code: string }[], typeSpeed = 18, deleteSpeed = 8, pauseMs = 1800) {
-  const [exIdx, setExIdx] = useState(0)
-  const [displayed, setDisplayed] = useState('')
-  const [phase, setPhase] = useState<'typing' | 'pausing' | 'deleting'>('typing')
-
-  useEffect(() => {
-    const code = examples[exIdx].code
-    let timeout: ReturnType<typeof setTimeout>
-
-    if (phase === 'typing') {
-      if (displayed.length < code.length) {
-        timeout = setTimeout(() => setDisplayed(code.slice(0, displayed.length + 1)), typeSpeed)
-      } else {
-        timeout = setTimeout(() => setPhase('pausing'), pauseMs)
-      }
-    } else if (phase === 'pausing') {
-      timeout = setTimeout(() => setPhase('deleting'), 200)
-    } else {
-      if (displayed.length > 0) {
-        timeout = setTimeout(() => setDisplayed(d => d.slice(0, -1)), deleteSpeed)
-      } else {
-        setExIdx(i => (i + 1) % examples.length)
-        setPhase('typing')
-      }
-    }
-    return () => clearTimeout(timeout)
-  }, [displayed, phase, exIdx, examples, typeSpeed, deleteSpeed, pauseMs])
-
-  return { displayed, exIdx, phase }
-}
-
-const pills = [
-  { icon: Zap, label: '< 50ms avg response' },
-  { icon: Globe, label: '60+ providers' },
-  { icon: Lock, label: 'API key auth' },
+const features = [
+  { icon: ArrowRight, text: 'One endpoint pattern across all providers' },
+  { icon: BookOpen, text: 'Consistent JSON — no provider-specific parsing' },
+  { icon: Layers, text: 'Switch sources with a single query param' },
 ]
 
 export default function CodeDemo() {
+  const [active, setActive] = useState(0)
   const [copied, setCopied] = useState(false)
-  const { displayed, exIdx, phase } = useLoopTypewriter(examples)
-  const currentExample = examples[exIdx]
 
   const copy = () => {
-    navigator.clipboard.writeText(currentExample.code)
+    navigator.clipboard.writeText(examples[active].code)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
 
   return (
-    <section style={{
-      padding: '100px 2rem',
+    <section id="quick-start" style={{
+      padding: '80px 1.5rem',
       background: '#000',
-      borderTop: '1px solid var(--border)',
-      borderBottom: '1px solid var(--border)',
+      borderTop: '1px solid rgba(255,255,255,0.07)',
+      borderBottom: '1px solid rgba(255,255,255,0.07)',
     }}>
       <div style={{ maxWidth: 1100, margin: '0 auto' }}>
-        <div style={{
+        <div className="code-grid" style={{
           display: 'grid',
-          gridTemplateColumns: '1fr 1.1fr',
-          gap: '5rem',
-          alignItems: 'center',
-        }} className="code-grid">
+          gridTemplateColumns: '1fr 1.15fr',
+          gap: '4rem',
+          alignItems: 'start',
+        }}>
 
           {/* ── Left ── */}
-          <AnimatedSection direction="left">
+          <div>
             <p style={{
               fontSize: 11, fontWeight: 700, letterSpacing: '0.15em',
-              textTransform: 'uppercase', color: 'var(--text3)',
+              textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)',
               marginBottom: '1rem',
-              fontFamily: 'var(--font-geist-mono, "JetBrains Mono", monospace)',
+              fontFamily: 'var(--font-geist-mono,"JetBrains Mono",monospace)',
             }}>Quick Start</p>
 
             <h2 style={{
-              fontSize: 'clamp(1.8rem, 3vw, 2.5rem)',
+              fontSize: 'clamp(1.6rem, 2.8vw, 2.2rem)',
               fontWeight: 800, letterSpacing: '-0.03em',
-              lineHeight: 1.15, marginBottom: '1.25rem',
+              lineHeight: 1.2, marginBottom: '1rem', color: '#fff',
             }}>
-              One request.<br />
-              <span style={{ color: 'var(--text2)', fontWeight: 400 }}>Any provider.</span>
+              Ship faster.<br />
+              <span style={{ color: 'rgba(255,255,255,0.4)', fontWeight: 400 }}>
+                Skip the scraping.
+              </span>
             </h2>
 
-            <p style={{ color: 'var(--text2)', fontSize: 15, lineHeight: 1.8, marginBottom: '2rem', maxWidth: 400 }}>
-              No SDKs, no wrappers. Just a clean REST API with consistent JSON responses across every source.
+            <p style={{
+              color: 'rgba(255,255,255,0.5)', fontSize: 14,
+              lineHeight: 1.8, marginBottom: '2rem', maxWidth: 380,
+            }}>
+              Every provider follows the same URL pattern. Learn once, use everywhere — no custom adapters, no brittle scrapers.
             </p>
 
-            {/* Stat pills */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', marginBottom: '2rem' }}>
-              {pills.map(({ icon: Icon, label }) => (
-                <div key={label} style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 10,
-                  padding: '8px 14px',
-                  background: 'var(--bg)',
-                  border: '1px solid var(--border)',
-                  borderRadius: 8,
-                  width: 'fit-content',
-                }}>
-                  <Icon size={14} style={{ color: 'var(--text3)' }} />
-                  <span style={{ fontSize: 13, color: 'var(--text2)', fontFamily: 'var(--font-geist-mono, "JetBrains Mono", monospace)' }}>{label}</span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '2rem' }}>
+              {features.map(({ icon: Icon, text }) => (
+                <div key={text} style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                  <Icon size={14} style={{ color: 'rgba(255,255,255,0.3)', marginTop: 3, flexShrink: 0 }} />
+                  <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', lineHeight: 1.5 }}>{text}</span>
                 </div>
               ))}
             </div>
 
-            {/* Base URL chip */}
+            {/* Base URL */}
             <div style={{
-              display: 'inline-flex', alignItems: 'center', gap: 8,
+              display: 'inline-flex', alignItems: 'center', gap: 10,
               padding: '8px 14px',
-              background: '#0a0a0a',
+              background: 'rgba(255,255,255,0.04)',
               border: '1px solid rgba(255,255,255,0.08)',
               borderRadius: 8,
             }}>
-              <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', fontFamily: 'var(--font-geist-mono, "JetBrains Mono", monospace)' }}>BASE URL</span>
-              <code style={{ fontSize: 12, color: '#86efac', fontFamily: 'var(--font-geist-mono, "JetBrains Mono", monospace)' }}>
-                api.crysoline.moe
-              </code>
+              <span style={{
+                fontSize: 10, fontWeight: 700, letterSpacing: '0.1em',
+                textTransform: 'uppercase',
+                color: 'rgba(255,255,255,0.25)',
+                fontFamily: 'var(--font-geist-mono,"JetBrains Mono",monospace)',
+              }}>BASE URL</span>
+              <code style={{
+                fontSize: 12, color: '#86efac',
+                fontFamily: 'var(--font-geist-mono,"JetBrains Mono",monospace)',
+              }}>api.crysoline.moe</code>
             </div>
-          </AnimatedSection>
+          </div>
 
-          {/* ── Right — terminal ── */}
-          <AnimatedSection direction="right">
+          {/* ── Right — static terminal ── */}
+          <div style={{
+            borderRadius: 12,
+            border: '1px solid rgba(255,255,255,0.1)',
+            overflow: 'hidden',
+            background: '#0d0d0d',
+          }}>
+            {/* Title bar */}
             <div style={{
-              borderRadius: 14,
-              border: '1px solid rgba(255,255,255,0.1)',
-              overflow: 'hidden',
-              background: '#0d0d0d',
-              boxShadow: '0 32px 80px rgba(0,0,0,0.5)',
+              padding: '10px 14px',
+              borderBottom: '1px solid rgba(255,255,255,0.06)',
+              display: 'flex', alignItems: 'center', gap: 8,
+              background: '#111',
             }}>
-              {/* Title bar */}
-              <div style={{
-                padding: '10px 16px',
-                borderBottom: '1px solid rgba(255,255,255,0.06)',
-                display: 'flex', alignItems: 'center', gap: 8,
-                background: '#111',
-              }}>
-                <div style={{ display: 'flex', gap: 6 }}>
-                  {['#ff5f57', '#febc2e', '#28c840'].map(c => (
-                    <div key={c} style={{ width: 11, height: 11, borderRadius: '50%', background: c }} />
-                  ))}
-                </div>
-                <div style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 6 }}>
-                  <Terminal size={11} style={{ color: 'rgba(255,255,255,0.25)' }} />
-                  <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)', fontFamily: 'var(--font-geist-mono, "JetBrains Mono", monospace)' }}>
-                    crysoline — api
-                  </span>
-                </div>
-                <button
-                  onClick={copy}
-                  style={{
-                    background: 'none', border: '1px solid rgba(255,255,255,0.1)',
-                    borderRadius: 5, padding: '3px 8px',
-                    cursor: 'pointer', color: 'rgba(255,255,255,0.35)',
-                    display: 'flex', alignItems: 'center', gap: 4,
-                    fontSize: 11, transition: 'all 0.2s',
-                    fontFamily: 'var(--font-geist-mono, "JetBrains Mono", monospace)',
-                  }}
-                  onMouseEnter={e => e.currentTarget.style.color = 'rgba(255,255,255,0.8)'}
-                  onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.35)'}
-                >
-                  {copied ? <Check size={10} /> : <Copy size={10} />}
-                  {copied ? 'copied' : 'copy'}
-                </button>
-              </div>
-
-              {/* Tabs — show which example is active */}
-              <div style={{
-                display: 'flex', gap: 0,
-                borderBottom: '1px solid rgba(255,255,255,0.06)',
-                background: '#0d0d0d',
-                padding: '0 4px',
-              }}>
-                {examples.map((ex, i) => (
-                  <div
-                    key={ex.label}
-                    style={{
-                      padding: '9px 16px',
-                      borderBottom: exIdx === i ? '2px solid rgba(255,255,255,0.5)' : '2px solid transparent',
-                      fontSize: 12,
-                      fontFamily: 'var(--font-geist-mono, "JetBrains Mono", monospace)',
-                      color: exIdx === i ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.25)',
-                      transition: 'color 0.3s, border-color 0.3s',
-                      userSelect: 'none',
-                    }}
-                  >
-                    {ex.label}
-                  </div>
+              <div style={{ display: 'flex', gap: 5 }}>
+                {['#ff5f57', '#febc2e', '#28c840'].map(c => (
+                  <div key={c} style={{ width: 10, height: 10, borderRadius: '50%', background: c }} />
                 ))}
               </div>
-
-              {/* Code */}
-              <div style={{ padding: '1.25rem 1.5rem', overflowX: 'auto', minHeight: 110 }}>
-                <pre style={{
-                  margin: 0,
-                  fontFamily: 'var(--font-geist-mono, "JetBrains Mono", monospace)',
-                  fontSize: 13, lineHeight: 1.9,
-                  color: 'rgba(255,255,255,0.7)',
-                  whiteSpace: 'pre',
-                }}>
-                  <span dangerouslySetInnerHTML={{ __html: highlight(displayed, currentExample.lang) }} />
-                  <span style={{
-                    display: 'inline-block', width: 2, height: '1em',
-                    background: phase === 'pausing' ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.65)',
-                    marginLeft: 1, verticalAlign: 'text-bottom',
-                    animation: phase === 'pausing' ? 'blink 0.8s step-end infinite' : 'none',
-                  }} />
-                </pre>
+              <div style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 5 }}>
+                <Terminal size={10} style={{ color: 'rgba(255,255,255,0.2)' }} />
+                <span style={{
+                  fontSize: 11, color: 'rgba(255,255,255,0.2)',
+                  fontFamily: 'var(--font-geist-mono,"JetBrains Mono",monospace)',
+                }}>crysoline — api</span>
               </div>
-
-              {/* Status bar */}
-              <div style={{
-                borderTop: '1px solid rgba(255,255,255,0.06)',
-                padding: '9px 16px',
-                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-                  <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#22c55e', boxShadow: '0 0 5px #22c55e' }} />
-                  <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)', fontFamily: 'var(--font-geist-mono, "JetBrains Mono", monospace)' }}>
-                    200 OK
-                  </span>
-                </div>
-                <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.2)', fontFamily: 'var(--font-geist-mono, "JetBrains Mono", monospace)' }}>
-                  application/json · ~42ms
-                </span>
-              </div>
+              <button
+                onClick={copy}
+                style={{
+                  background: 'none', border: '1px solid rgba(255,255,255,0.1)',
+                  borderRadius: 5, padding: '3px 8px', cursor: 'pointer',
+                  color: 'rgba(255,255,255,0.3)',
+                  display: 'flex', alignItems: 'center', gap: 4,
+                  fontSize: 11, transition: 'color 0.15s',
+                  fontFamily: 'var(--font-geist-mono,"JetBrains Mono",monospace)',
+                }}
+                onMouseEnter={e => e.currentTarget.style.color = 'rgba(255,255,255,0.8)'}
+                onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.3)'}
+              >
+                {copied ? <Check size={10} /> : <Copy size={10} />}
+                {copied ? 'copied' : 'copy'}
+              </button>
             </div>
-          </AnimatedSection>
+
+            {/* Tabs */}
+            <div style={{
+              display: 'flex',
+              borderBottom: '1px solid rgba(255,255,255,0.06)',
+              background: '#0d0d0d',
+              padding: '0 4px',
+            }}>
+              {examples.map((ex, i) => (
+                <button
+                  key={ex.label}
+                  onClick={() => setActive(i)}
+                  style={{
+                    padding: '8px 14px', background: 'none', border: 'none',
+                    borderBottom: active === i ? '2px solid rgba(255,255,255,0.5)' : '2px solid transparent',
+                    cursor: 'pointer', fontSize: 12,
+                    fontFamily: 'var(--font-geist-mono,"JetBrains Mono",monospace)',
+                    color: active === i ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.25)',
+                    transition: 'color 0.15s',
+                  }}
+                  onMouseEnter={e => { if (active !== i) e.currentTarget.style.color = 'rgba(255,255,255,0.55)' }}
+                  onMouseLeave={e => { if (active !== i) e.currentTarget.style.color = 'rgba(255,255,255,0.25)' }}
+                >
+                  {ex.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Static highlighted code */}
+            <div style={{ padding: '1.25rem 1.5rem', overflowX: 'auto' }}>
+              <pre style={{
+                margin: 0,
+                fontFamily: 'var(--font-geist-mono,"JetBrains Mono",monospace)',
+                fontSize: 13, lineHeight: 1.85,
+                color: 'rgba(255,255,255,0.65)',
+                whiteSpace: 'pre',
+              }}
+                dangerouslySetInnerHTML={{ __html: highlight(examples[active].code, examples[active].lang) }}
+              />
+            </div>
+
+            {/* Status bar */}
+            <div style={{
+              borderTop: '1px solid rgba(255,255,255,0.06)',
+              padding: '8px 14px',
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#22c55e', boxShadow: '0 0 4px #22c55e' }} />
+                <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.2)', fontFamily: 'var(--font-geist-mono,"JetBrains Mono",monospace)' }}>200 OK</span>
+              </div>
+              <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.15)', fontFamily: 'var(--font-geist-mono,"JetBrains Mono",monospace)' }}>
+                application/json · ~42ms
+              </span>
+            </div>
+          </div>
         </div>
       </div>
 
       <style>{`
+        .kw  { color: #a78bfa; }
+        .fn  { color: #60a5fa; }
+        .str { color: #86efac; }
+        .cm  { color: #4b5563; }
         @media (max-width: 768px) {
-          .code-grid { grid-template-columns: 1fr !important; gap: 2.5rem !important; }
+          .code-grid { grid-template-columns: 1fr !important; gap: 2rem !important; }
         }
       `}</style>
     </section>

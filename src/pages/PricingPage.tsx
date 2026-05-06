@@ -1,5 +1,5 @@
-import { useCallback, useState, useEffect } from 'react'
-import { Check, X as XIcon } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Check } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import AnimatedSection from '../components/AnimatedSection'
@@ -128,20 +128,13 @@ function FAQItem({ q, a }: { q: string; a: string }) {
 }
 
 export default function PricingPage() {
-  const [theme, setTheme] = useState<'dark' | 'light'>('dark')
-
   useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme)
     window.scrollTo(0, 0)
-  }, [theme])
-
-  const toggleTheme = useCallback(() => {
-    setTheme(t => t === 'dark' ? 'light' : 'dark')
   }, [])
 
   return (
-    <div className="noise" style={{ minHeight: '100vh', background: 'var(--bg)' }}>
-      <Navbar theme={theme} toggleTheme={toggleTheme} />
+    <div style={{ minHeight: '100vh', background: '#000', color: '#fff' }}>
+      <Navbar />
       <div style={{ paddingTop: 64 }}>
 
         {/* Plans */}
